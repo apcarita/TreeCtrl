@@ -12,28 +12,34 @@ For full strip: MUST use external power supply
 """
 
 import time
-import board
-import neopixel
+from rpi_ws281x import PixelStrip, Color
 
 # Configuration
-LED_COUNT = 10  # Start with just 10 LEDs for testing
-LED_PIN = board.D18  # GPIO 18 (PWM capable)
-BRIGHTNESS = 0.2  # 20% brightness for testing (0.0 to 1.0)
+LED_COUNT = 10       # Start with just 10 LEDs for testing
+LED_PIN = 18         # GPIO 18 (PWM capable)
+LED_FREQ_HZ = 800000 # LED signal frequency in hertz
+LED_DMA = 10         # DMA channel to use for generating signal
+LED_BRIGHTNESS = 51  # 0-255, starting at 20% (51/255)
+LED_INVERT = False   # True to invert the signal
+LED_CHANNEL = 0      # 0 or 1
 
 # Initialize the LED strip
-# auto_write=False means we update all LEDs at once with .show()
-pixels = neopixel.NeoPixel(
-    LED_PIN,
+pixels = PixelStrip(
     LED_COUNT,
-    brightness=BRIGHTNESS,
-    auto_write=False,
-    pixel_order=neopixel.GRB  # WS2812B uses GRB order
+    LED_PIN,
+    LED_FREQ_HZ,
+    LED_DMA,
+    LED_INVERT,
+    LED_BRIGHTNESS,
+    LED_CHANNEL
 )
+pixels.begin()
 
 
 def clear():
     """Turn off all LEDs"""
-    pixels.fill((0, 0, 0))
+    for i in range(pixels.numPixels()):
+        pixels.setPixelColor(i, Color(0, 0, 0))
     pixels.show()
 
 
@@ -44,20 +50,20 @@ def test_individual_control():
     
     # Light up each LED one at a time in different colors
     colors = [
-        (255, 0, 0),    # Red
-        (0, 255, 0),    # Green
-        (0, 0, 255),    # Blue
-        (255, 255, 0),  # Yellow
-        (255, 0, 255),  # Magenta
-        (0, 255, 255),  # Cyan
-        (255, 255, 255) # White
+        Color(255, 0, 0),    # Red
+        Color(0, 255, 0),    # Green
+        Color(0, 0, 255),    # Blue
+        Color(255, 255, 0),  # Yellow
+        Color(255, 0, 255),  # Magenta
+        Color(0, 255, 255),  # Cyan
+        Color(255, 255, 255) # White
     ]
     
     for i in range(LED_COUNT):
         color = colors[i % len(colors)]
-        pixels[i] = color
+        pixels.setPixelColor(i, color)
         pixels.show()
-        print(f"LED {i}: {color}")
+        print(f"LED {i}: RGB color")
         time.sleep(0.3)
     
     time.sleep(1)
@@ -71,18 +77,18 @@ def test_rainbow_chase():
     def wheel(pos):
         """Generate rainbow colors across 0-255 positions"""
         if pos < 85:
-            return (pos * 3, 255 - pos * 3, 0)
+            return Color(pos * 3, 255 - pos * 3, 0)
         elif pos < 170:
             pos -= 85
-            return (255 - pos * 3, 0, pos * 3)
+            return Color(255 - pos * 3, 0, pos * 3)
         else:
             pos -= 170
-            return (0, pos * 3, 255 - pos * 3)
+            return Color(0, pos * 3, 255 - pos * 3)
     
     for j in range(255):
         for i in range(LED_COUNT):
             pixel_index = (i * 256 // LED_COUNT) + j
-            pixels[i] = wheel(pixel_index & 255)
+            pixels.setPixelColor(i, wheel(pixel_index & 255))
         pixels.show()
         time.sleep(0.02)
     
@@ -94,15 +100,16 @@ def test_all_same_color():
     print("Testing all LEDs same color...")
     
     colors = [
-        (255, 0, 0),    # Red
-        (0, 255, 0),    # Green
-        (0, 0, 255),    # Blue
-        (255, 255, 255) # White
+        Color(255, 0, 0),    # Red
+        Color(0, 255, 0),    # Green
+        Color(0, 0, 255),    # Blue
+        Color(255, 255, 255) # White
     ]
     
     for color in colors:
-        print(f"All LEDs: {color}")
-        pixels.fill(color)
+        print(f"All LEDs: color")
+        for i in range(pixels.numPixels()):
+            pixels.setPixelColor(i, color)
         pixels.show()
         time.sleep(1)
     
@@ -114,7 +121,7 @@ def main():
     print("WS2812B LED Strip Test")
     print("=" * 50)
     print(f"LED Count: {LED_COUNT}")
-    print(f"Brightness: {BRIGHTNESS * 100}%")
+    print(f"Brightness: {LED_BRIGHTNESS}/255 ({int(LED_BRIGHTNESS/255*100)}%)")
     print(f"Pin: GPIO 18")
     print("=" * 50)
     print()
