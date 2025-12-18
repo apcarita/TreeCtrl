@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeCtrl Volumetric Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 250px;
+        }
+        
+        #controls h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+        }
+        
+        .control-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .stats {
+            font-size: 12px;
+            color: #666;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        .stats div {
+            margin-bottom: 5px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="controls">
+        <h2>TreeCtrl Display</h2>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="showLEDs" checked> Show LEDs
+            </label>
+            <label>
+                <input type="checkbox" id="showArms" checked> Show Arms
+            </label>
+            <label>
+                <input type="checkbox" id="showTrunk" checked> Show Trunk
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>Rotation Speed (x):</label>
+            <input type="number" id="rotationSpeed" min="0" max="100" step="0.1" value="1">
+        </div>
+        
+        <div class="control-group">
+            <label>LED Brightness: <span id="brightnessValue">100</span>%</label>
+            <input type="range" id="ledBrightness" min="0" max="100" step="1" value="100">
+        </div>
+        
+        <div class="control-group">
+            <label>Arm Vertical Spacing (mm): <span id="spacingValue">16</span></label>
+            <input type="number" id="armSpacing" min="5" max="50" step="0.5" value="16">
+        </div>
+        
+        <button id="resetView">Reset View</button>
+        <button id="toggleDemo">Toggle Demo Mode</button>
+        
+        <div class="stats">
+            <div><strong>Specs:</strong></div>
+            <div>Arms: 80</div>
+            <div>Height: 1.33m</div>
+            <div>LEDs/arm: 23</div>
+            <div>Total LEDs: 1840</div>
+            <div>LED spacing: 12.4mm</div>
+        </div>
+    </div>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
+
