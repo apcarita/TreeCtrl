@@ -3,161 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TreeCtrl Volumetric Display</title>
+    <title>TreeCtrl</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: rgba(13, 17, 23, 0.85);
+            --border: #30363d;
+            --text: #e6edf3;
+            --dim: #7d8590;
+            --accent: #58a6ff;
+            --green: #3fb950;
+            --red: #f85149;
+            --blue: #58a6ff;
         }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
-            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: var(--text);
             overflow: hidden;
         }
+        #canvas-container { position: fixed; inset: 0; }
         
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-        }
-        
-        #controls {
-            position: absolute;
+        #panel {
+            position: fixed;
             top: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 20px;
+            background: var(--bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            min-width: 250px;
+            padding: 16px;
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
         
-        #controls h2 {
-            margin-bottom: 15px;
-            font-size: 18px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 10px;
-        }
+        h1 { font-size: 16px; font-weight: 600; }
         
-        .control-group {
-            margin-bottom: 15px;
-        }
-        
-        .control-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #aaa;
-        }
-        
-        .control-group input[type="range"] {
-            width: 100%;
-        }
-        
-        .control-group input[type="checkbox"] {
-            margin-right: 8px;
-        }
-        
-        .stats {
-            font-size: 12px;
-            color: #666;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #333;
-        }
-        
-        .stats div {
-            margin-bottom: 5px;
-        }
+        .row { display: flex; gap: 8px; }
         
         button {
-            background: #4CAF50;
-            color: white;
+            font-family: inherit;
+            font-size: 11px;
+            background: var(--accent);
+            color: #000;
             border: none;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
-            width: 100%;
-            font-size: 14px;
-            margin-top: 10px;
+            font-weight: 600;
         }
+        button:hover { opacity: 0.85; }
+        button:disabled { opacity: 0.4; }
+        button.secondary { background: var(--border); color: var(--text); }
         
-        button:hover {
-            background: #45a049;
-        }
-        
-        input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
+        .status {
+            font-size: 11px;
+            color: var(--dim);
+            padding: 6px 10px;
+            background: rgba(0,0,0,0.3);
             border-radius: 4px;
-            font-size: 14px;
+            border: 1px solid var(--border);
+        }
+        .status.connected { border-color: var(--green); color: var(--green); }
+        .status.error { border-color: var(--red); color: var(--red); }
+        
+        .section { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        
+        .control { display: flex; flex-direction: column; gap: 4px; }
+        .control-header { display: flex; justify-content: space-between; font-size: 12px; }
+        .val { color: var(--accent); }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
         }
         
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #4CAF50;
+        .color-bar {
+            display: flex;
+            height: 16px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
         }
+        .color-bar .green { background: var(--green); }
+        .color-bar .red { background: var(--red); }
+        .color-bar .blue { background: var(--blue); }
+        
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .actions button { padding: 10px 8px; }
     </style>
 </head>
 <body>
     <div id="canvas-container"></div>
     
-    <div id="controls">
-        <h2>TreeCtrl Display</h2>
+    <div id="panel">
+        <h1>TreeCtrl</h1>
         
-        <div class="control-group">
-            <label>
-                <input type="checkbox" id="showLEDs" checked> Show LEDs
-            </label>
-            <label>
-                <input type="checkbox" id="showArms" checked> Show Arms
-            </label>
-            <label>
-                <input type="checkbox" id="showTrunk" checked> Show Trunk
-            </label>
+        <div class="row">
+            <button id="connectBtn">Connect</button>
+            <button id="disconnectBtn" class="secondary" disabled>Disconnect</button>
+        </div>
+        <div id="status" class="status">Not connected</div>
+        
+        <div class="section">Display</div>
+        
+        <div class="control">
+            <div class="control-header">
+                <span>Brightness</span>
+                <span class="val" id="brightnessVal">50</span>
+            </div>
+            <input type="range" id="brightness" min="0" max="255" value="50">
         </div>
         
-        <div class="control-group">
-            <label>Rotation Speed (x):</label>
-            <input type="number" id="rotationSpeed" min="0" max="100" step="0.1" value="1">
+        <div class="control">
+            <div class="control-header">
+                <span>RPS</span>
+                <span class="val" id="rpsVal">2.0</span>
+            </div>
+            <input type="range" id="rps" min="0" max="10" step="0.1" value="2">
         </div>
         
-        <div class="control-group">
-            <label>LED Brightness: <span id="brightnessValue">100</span>%</label>
-            <input type="range" id="ledBrightness" min="0" max="100" step="1" value="100">
+        <div class="section">Colors</div>
+        
+        <div class="control">
+            <div class="control-header">
+                <span style="color:var(--green)">Green</span>
+                <span class="val" id="greenVal">80%</span>
+            </div>
+            <input type="range" id="greenPct" min="0" max="100" value="80">
         </div>
         
-        <div class="control-group">
-            <label>Arm Vertical Spacing (mm): <span id="spacingValue">16</span></label>
-            <input type="number" id="armSpacing" min="5" max="50" step="0.5" value="16">
+        <div class="control">
+            <div class="control-header">
+                <span style="color:var(--red)">Red</span>
+                <span class="val" id="redVal">15%</span>
+            </div>
+            <input type="range" id="redPct" min="0" max="100" value="15">
         </div>
         
-        <button id="resetView">Reset View</button>
-        <button id="toggleDemo">Toggle Demo Mode</button>
+        <div class="control">
+            <div class="control-header">
+                <span style="color:var(--blue)">Blue</span>
+                <span class="val" id="blueVal">5%</span>
+            </div>
+            <input type="range" id="bluePct" min="0" max="100" value="5">
+        </div>
         
-        <div class="stats">
-            <div><strong>Specs:</strong></div>
-            <div>Arms: 80</div>
-            <div>Height: 1.33m</div>
-            <div>LEDs/arm: 23</div>
-            <div>Total LEDs: 1840</div>
-            <div>LED spacing: 12.4mm</div>
+        <div class="color-bar">
+            <div class="green" id="greenBar" style="width:80%"></div>
+            <div class="red" id="redBar" style="width:15%"></div>
+            <div class="blue" id="blueBar" style="width:5%"></div>
+        </div>
+        
+        <div class="section">Actions</div>
+        <div class="actions">
+            <button id="randomBtn">Randomize</button>
+            <button id="offBtn" class="secondary">Off</button>
+            <button id="allGreen">All Green</button>
+            <button id="allRed">All Red</button>
         </div>
     </div>
     
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-            }
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
         }
+    }
     </script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
-
